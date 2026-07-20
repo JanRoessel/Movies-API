@@ -8,11 +8,20 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def fetch_movie(title):
+    if not API_KEY:
+        print("OMDB_API_KEY is not configured. Set it in your environment before running the app.")
+        return None
+
     try:
-        url = f"https://www.omdbapi.com/?apikey={API_KEY}&t={title}"
-        return requests.get(url).json()
-    except Exception as e:
-        print(f"Could not reach OMDB API: {e}")
+        response = requests.get(
+            "https://www.omdbapi.com/",
+            params={"apikey": API_KEY, "t": title},
+            timeout=10,
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as error:
+        print(f"Could not reach OMDb API: {error}")
         return None
 
 
@@ -79,7 +88,7 @@ def add_movie_from_api(user_id):
     title = input("Movie title: ")
     data = fetch_movie(title)
 
-    if data.get("Response") == "False":
+    if not data or data.get("Response") == "False":
         print("Not found.")
         return
 
